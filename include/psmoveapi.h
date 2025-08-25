@@ -77,7 +77,7 @@ struct EventReceiver {
 };
 
 ADDAPI void
-ADDCALL psmoveapi_init(EventReceiver *receiver, void *user_data);
+ADDCALL psmoveapi_init(struct EventReceiver *receiver, void *user_data);
 
 ADDAPI void
 ADDCALL psmoveapi_update();
