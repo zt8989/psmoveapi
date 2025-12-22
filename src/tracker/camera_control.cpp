@@ -43,6 +43,87 @@
 #include "opencv2/calib3d/calib3d.hpp"
 
 
+struct CameraControlOpenCVFallback : public CameraControlOpenCV {
+    CameraControlOpenCVFallback(int camera_id, int width, int height, int framerate);
+
+    virtual CameraControlFrameLayout get_frame_layout(int width, int height) override;
+    virtual void set_parameters(float exposure, bool mirror) override;
+    virtual PSMoveCameraInfo get_camera_info() override;
+    virtual IplImage *query_frame() override;
+
+    bool mirror { false };
+};
+
+CameraControlOpenCVFallback::CameraControlOpenCVFallback(int camera_id, int width, int height, int framerate)
+    : CameraControlOpenCV(camera_id, width, height, framerate)
+{
+    capture = new cv::VideoCapture(cameraID);
+
+    if (capture->isOpened()) {
+        layout = get_frame_layout(width, height);
+
+        capture->set(cv::CAP_PROP_FRAME_WIDTH, layout.capture_width);
+        capture->set(cv::CAP_PROP_FRAME_HEIGHT, layout.capture_height);
+        capture->set(cv::CAP_PROP_FPS, framerate);
+    }
+}
+
+CameraControlFrameLayout
+CameraControlOpenCVFallback::get_frame_layout(int width, int height)
+{
+    return CameraControl::get_frame_layout(width, height);
+}
+
+IplImage *
+CameraControlOpenCVFallback::query_frame()
+{
+    IplImage *frame = CameraControlOpenCV::query_frame();
+
+    if (frame && mirror) {
+        cv::Mat mat = cv::cvarrToMat(frame);
+        cv::flip(mat, mat, 1);
+    }
+
+    return frame;
+}
+
+void
+CameraControlOpenCVFallback::set_parameters(float exposure, bool mirror)
+{
+    this->mirror = mirror;
+
+    if (capture && capture->isOpened()) {
+        capture->set(cv::CAP_PROP_AUTO_EXPOSURE, 0);
+        capture->set(cv::CAP_PROP_EXPOSURE, exposure);
+    }
+}
+
+PSMoveCameraInfo
+CameraControlOpenCVFallback::get_camera_info()
+{
+    return PSMoveCameraInfo {
+        "Generic camera",
+        "OpenCV",
+        layout.crop_width,
+        layout.crop_height,
+    };
+}
+
+static CameraControl *
+camera_control_new_opencv_fallback(int cameraID, int width, int height, int framerate)
+{
+    auto *cc = new CameraControlOpenCVFallback(cameraID, width, height, framerate);
+
+    if (cc->capture && cc->capture->isOpened()) {
+        PSMOVE_INFO("Falling back to OpenCV VideoCapture for camera %d", cameraID);
+        return cc;
+    }
+
+    delete cc;
+    PSMOVE_WARNING("OpenCV fallback could not open camera %d", cameraID);
+    return nullptr;
+}
+
 CameraControl *
 camera_control_new_with_settings(int cameraID, int width, int height, int framerate)
 {
@@ -81,6 +162,10 @@ camera_control_new_with_settings(int cameraID, int width, int height, int framer
         cc = new CameraControlVideoFile(video, width, height, framerate);
     } else {
         cc = camera_control_driver_new(cameraID, width, height, framerate);
+
+        if (cc == nullptr) {
+            cc = camera_control_new_opencv_fallback(cameraID, width, height, framerate);
+        }
     }
 
     return cc;
