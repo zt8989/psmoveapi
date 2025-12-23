@@ -13,13 +13,6 @@ PSMOVE_TRACKER_CAMERA
 
         export PSMOVE_TRACKER_CAMERA=2  # Will use the 3rd camera
 
-    .. note::
-
-       When ``PSMOVE_USE_PS3EYE_DRIVER`` is enabled but no PS Eye is connected,
-       the tracker falls back to the generic OpenCV backend. The camera index
-       still matches the order used by OpenCV, so third-party cameras can be
-       selected with this variable.
-
 PSMOVE_TRACKER_FILENAME
     If set, this will use a video file to playback instead of capturing from a camera. Any camera settings are ignored.
 
