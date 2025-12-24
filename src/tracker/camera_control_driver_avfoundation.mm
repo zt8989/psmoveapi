@@ -34,6 +34,16 @@
 
 #import "AVFoundation/AVFoundation.h"
 
+#if defined(PSMOVE_MULTI_CAMERA_DRIVERS)
+#define CAMERA_CONTROL_DRIVER_NEW camera_control_driver_avfoundation_new
+#define CAMERA_CONTROL_DRIVER_GET_PREFERRED camera_control_driver_avfoundation_get_preferred_camera
+#define CAMERA_CONTROL_DRIVER_COUNT_CONNECTED camera_control_driver_avfoundation_count_connected
+#else
+#define CAMERA_CONTROL_DRIVER_NEW camera_control_driver_new
+#define CAMERA_CONTROL_DRIVER_GET_PREFERRED camera_control_driver_get_preferred_camera
+#define CAMERA_CONTROL_DRIVER_COUNT_CONNECTED camera_control_driver_count_connected
+#endif
+
 #include <map>
 #include <algorithm>
 #include <string>
@@ -307,16 +317,16 @@ CameraControlAVFoundation::get_camera_info()
     };
 }
 
-CameraControl *
-camera_control_driver_new(int camera_id, int width, int height, int framerate)
+extern "C" CameraControl *
+CAMERA_CONTROL_DRIVER_NEW(int camera_id, int width, int height, int framerate)
 {
     detected_cameras.init();
 
     return new CameraControlAVFoundation(camera_id, width, height, framerate);
 }
 
-int
-camera_control_driver_get_preferred_camera()
+extern "C" int
+CAMERA_CONTROL_DRIVER_GET_PREFERRED()
 {
     int result = -1;
 
@@ -336,8 +346,8 @@ camera_control_driver_get_preferred_camera()
     return result;
 }
 
-int
-camera_control_driver_count_connected()
+extern "C" int
+CAMERA_CONTROL_DRIVER_COUNT_CONNECTED()
 {
     return detected_cameras.count();
 }

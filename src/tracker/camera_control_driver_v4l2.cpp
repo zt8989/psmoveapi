@@ -33,6 +33,16 @@
 
 #include "../psmove_private.h"
 
+#if defined(PSMOVE_MULTI_CAMERA_DRIVERS)
+#define CAMERA_CONTROL_DRIVER_NEW camera_control_driver_v4l2_new
+#define CAMERA_CONTROL_DRIVER_GET_PREFERRED camera_control_driver_v4l2_get_preferred_camera
+#define CAMERA_CONTROL_DRIVER_COUNT_CONNECTED camera_control_driver_v4l2_count_connected
+#else
+#define CAMERA_CONTROL_DRIVER_NEW camera_control_driver_new
+#define CAMERA_CONTROL_DRIVER_GET_PREFERRED camera_control_driver_get_preferred_camera
+#define CAMERA_CONTROL_DRIVER_COUNT_CONNECTED camera_control_driver_count_connected
+#endif
+
 #include <linux/videodev2.h>
 #include <libv4l2.h>
 #include <fcntl.h>
@@ -344,14 +354,14 @@ CameraControlV4L2::get_camera_info()
     };
 }
 
-CameraControl *
-camera_control_driver_new(int camera_id, int width, int height, int framerate)
+extern "C" CameraControl *
+CAMERA_CONTROL_DRIVER_NEW(int camera_id, int width, int height, int framerate)
 {
     return new CameraControlV4L2(camera_id, width, height, framerate);
 }
 
-int
-camera_control_driver_get_preferred_camera()
+extern "C" int
+CAMERA_CONTROL_DRIVER_GET_PREFERRED()
 {
     int result = -1;
 
@@ -382,8 +392,8 @@ camera_control_driver_get_preferred_camera()
     return result;
 }
 
-int
-camera_control_driver_count_connected()
+extern "C" int
+CAMERA_CONTROL_DRIVER_COUNT_CONNECTED()
 {
     int i = 0;
     glob_t g;

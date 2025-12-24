@@ -31,6 +31,22 @@
 
 #include "ps3eye_capi.h"
 
+#if defined(PSMOVE_MULTI_CAMERA_DRIVERS)
+#define CAMERA_CONTROL_DRIVER_NEW camera_control_driver_ps3eye_new
+#define CAMERA_CONTROL_DRIVER_GET_PREFERRED camera_control_driver_ps3eye_get_preferred_camera
+#define CAMERA_CONTROL_DRIVER_COUNT_CONNECTED camera_control_driver_ps3eye_count_connected
+#else
+#define CAMERA_CONTROL_DRIVER_NEW camera_control_driver_new
+#define CAMERA_CONTROL_DRIVER_GET_PREFERRED camera_control_driver_get_preferred_camera
+#define CAMERA_CONTROL_DRIVER_COUNT_CONNECTED camera_control_driver_count_connected
+#endif
+
+#if defined(PSMOVE_MULTI_CAMERA_DRIVERS)
+extern "C" int camera_control_driver_ps3eye_count_connected();
+extern "C" int camera_control_driver_ps3eye_get_preferred_camera();
+extern "C" CameraControl *camera_control_driver_ps3eye_new(int camera_id, int width, int height, int framerate);
+#endif
+
 struct CameraControlPS3EYEDriver : public CameraControl {
     CameraControlPS3EYEDriver(int camera_id, int width, int height, int framerate);
     virtual ~CameraControlPS3EYEDriver();
@@ -97,27 +113,27 @@ CameraControlPS3EYEDriver::get_camera_info()
     };
 }
 
-CameraControl *
-camera_control_driver_new(int camera_id, int width, int height, int framerate)
+extern "C" CameraControl *
+CAMERA_CONTROL_DRIVER_NEW(int camera_id, int width, int height, int framerate)
 {
     ps3eye_init();
 
-    if (camera_control_driver_count_connected() <= camera_id) {
-        PSMOVE_WARNING("Invalid camera id: %d (%d connected)", camera_id, camera_control_driver_count_connected());
+    if (CAMERA_CONTROL_DRIVER_COUNT_CONNECTED() <= camera_id) {
+        PSMOVE_WARNING("Invalid camera id: %d (%d connected)", camera_id, CAMERA_CONTROL_DRIVER_COUNT_CONNECTED());
         return nullptr;
     }
 
     return new CameraControlPS3EYEDriver(camera_id, width, height, framerate);
 }
 
-int
-camera_control_driver_get_preferred_camera()
+extern "C" int
+CAMERA_CONTROL_DRIVER_GET_PREFERRED()
 {
     return 0;
 }
 
-int
-camera_control_driver_count_connected()
+extern "C" int
+CAMERA_CONTROL_DRIVER_COUNT_CONNECTED()
 {
     ps3eye_init();
 
