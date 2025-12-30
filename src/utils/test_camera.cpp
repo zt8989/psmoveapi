@@ -29,6 +29,7 @@
  **/
 
 #include <stdio.h>
+#include <chrono>
 
 #include "opencv2/core/core_c.h"
 #include "opencv2/highgui/highgui_c.h"
@@ -91,12 +92,25 @@ main(int argc, char *argv[])
         return 1;
     }
 
+    auto fps_last = std::chrono::steady_clock::now();
+    int fps_frames = 0;
+    double fps = 0.0;
+
     while ((cvWaitKey(1) & 0xFF) != 27) {
         psmove_tracker_update_image(tracker);
         psmove_tracker_update(tracker, NULL);
 
         IplImage *frame = psmove_tracker_opencv_get_frame(tracker);
         if (frame) {
+            ++fps_frames;
+            auto now = std::chrono::steady_clock::now();
+            auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - fps_last).count();
+            if (elapsed_ms >= 1000) {
+                fps = (fps_frames * 1000.0) / elapsed_ms;
+                fps_frames = 0;
+                fps_last = now;
+            }
+
             for (int col=0; col<7; ++col) {
                 int x = col * (frame->width - 1) / 6;
                 cv::line(cv::cvarrToMat(frame), cv::Point(x, 0), cv::Point(x, frame->height - 1), cvScalar(255, (col==3)?255:0, 0, 0));
@@ -111,6 +125,10 @@ main(int argc, char *argv[])
             CvPoint txt = cvPoint(30, 30);
             std::string tmp = format("%s %dx%d (%s)", camera_info->camera_name, camera_info->width, camera_info->height, camera_info->camera_api);
             cvPutText(frame, tmp.c_str(), txt, &fontSmall, CvScalar{255.0, 255.0, 255.0, 255.0});
+
+            CvPoint fps_txt = cvPoint(30, 60);
+            std::string fps_text = format("FPS: %.1f", fps);
+            cvPutText(frame, fps_text.c_str(), fps_txt, &fontSmall, CvScalar{255.0, 255.0, 255.0, 255.0});
 
             cvShowImage("live camera feed", frame);
         }

@@ -33,9 +33,9 @@ CameraControl *camera_control_driver_ps3eye_new(int camera_id, int width, int he
 int camera_control_driver_ps3eye_get_preferred_camera();
 int camera_control_driver_ps3eye_count_connected();
 
-CameraControl *camera_control_driver_opencv_new(int camera_id, int width, int height, int framerate);
-int camera_control_driver_opencv_get_preferred_camera();
-int camera_control_driver_opencv_count_connected();
+CameraControl *camera_control_driver_avfoundation_new(int camera_id, int width, int height, int framerate);
+int camera_control_driver_avfoundation_get_preferred_camera();
+int camera_control_driver_avfoundation_count_connected();
 }
 
 extern "C" CameraControl *
@@ -48,7 +48,7 @@ camera_control_driver_new(int camera_id, int width, int height, int framerate)
         }
     }
 
-    return camera_control_driver_opencv_new(camera_id, width, height, framerate);
+    return camera_control_driver_avfoundation_new(camera_id, width, height, framerate);
 }
 
 extern "C" int
@@ -58,7 +58,7 @@ camera_control_driver_get_preferred_camera()
         return camera_control_driver_ps3eye_get_preferred_camera();
     }
 
-    return camera_control_driver_opencv_get_preferred_camera();
+    return camera_control_driver_avfoundation_get_preferred_camera();
 }
 
 extern "C" int
@@ -69,5 +69,5 @@ camera_control_driver_count_connected()
         return ps3eye_count;
     }
 
-    return camera_control_driver_opencv_count_connected();
+    return camera_control_driver_avfoundation_count_connected();
 }

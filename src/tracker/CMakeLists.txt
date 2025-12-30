@@ -97,19 +97,20 @@ set(INFO_CAMERA_CONTROL_DRIVER "-")
 # 2 - Platform-specific settings
 IF(PSMOVE_BUILD_TRACKER)
     IF(PSMOVE_USE_PS3EYE_DRIVER AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-        set(INFO_CAMERA_CONTROL_DRIVER "PS3EYEDriver + OpenCV")
+        set(INFO_CAMERA_CONTROL_DRIVER "PS3EYEDriver + AVFoundation")
         add_definitions(-DPSMOVE_MULTI_CAMERA_DRIVERS)
         list(APPEND PSMOVEAPI_TRACKER_PLATFORM_SRC
             ${CMAKE_CURRENT_LIST_DIR}/camera_control_driver_ps3eyedriver.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/camera_control_driver_opencv.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/camera_control_driver_avfoundation.mm
             ${CMAKE_CURRENT_LIST_DIR}/camera_control_driver_multi_osx.cpp)
     ELSEIF(PSMOVE_USE_PS3EYE_DRIVER AND ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-        set(INFO_CAMERA_CONTROL_DRIVER "PS3EYEDriver + OpenCV")
+        set(INFO_CAMERA_CONTROL_DRIVER "PS3EYEDriver + V4L2")
         add_definitions(-DPSMOVE_MULTI_CAMERA_DRIVERS)
         list(APPEND PSMOVEAPI_TRACKER_PLATFORM_SRC
             ${CMAKE_CURRENT_LIST_DIR}/camera_control_driver_ps3eyedriver.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/camera_control_driver_opencv.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/camera_control_driver_v4l2.cpp
             ${CMAKE_CURRENT_LIST_DIR}/camera_control_driver_multi_linux.cpp)
+        list(APPEND PSMOVEAPI_TRACKER_REQUIRED_LIBS v4l2)
     ELSEIF(PSMOVE_USE_PS3EYE_DRIVER AND ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
         set(INFO_CAMERA_CONTROL_DRIVER "PS3EYEDriver + OpenCV")
         add_definitions(-DPSMOVE_MULTI_CAMERA_DRIVERS)
